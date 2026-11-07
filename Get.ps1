@@ -53,7 +53,11 @@
             if (-not $expected) { throw 'SHA256SUMS does not list UDP.zip.' }
 
             Invoke-WebRequest -Uri $zipAsset.browser_download_url -OutFile $archive -UseBasicParsing -UserAgent 'UDP'
-            $actual = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+            # SHA256 with .NET: Get-FileHash is missing from Windows PowerShell on some Windows builds.
+            $sha256 = [System.Security.Cryptography.SHA256]::Create()
+            $stream = [System.IO.File]::OpenRead($archive)
+            try { $actual = ([System.BitConverter]::ToString($sha256.ComputeHash($stream)) -replace '-', '').ToLowerInvariant() }
+            finally { $stream.Dispose(); $sha256.Dispose() }
             if ($actual -ne $expected) {
                 Remove-Item -LiteralPath $archive -Force
                 throw "The downloaded UDP.zip does not match the published SHA256 (expected $expected, got $actual)."

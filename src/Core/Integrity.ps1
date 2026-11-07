@@ -1,11 +1,28 @@
 # Integrity checks for everything UDP downloads: SHA256 hashes and Authenticode signatures.
 
+# SHA256 of a file as lowercase hex, computed with .NET directly. Get-FileHash is not used on
+# purpose: in Windows PowerShell 5.1 it is a script function of the Microsoft.PowerShell.Utility
+# module rather than a built-in command, and it is missing on some Windows builds (seen on
+# Windows 11 build 26300).
+function Get-UdpFileSha256 {
+    param([Parameter(Mandatory)][string]$Path)
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        return ([System.BitConverter]::ToString($sha256.ComputeHash($stream)) -replace '-', '').ToLowerInvariant()
+    }
+    finally {
+        $stream.Dispose()
+        $sha256.Dispose()
+    }
+}
+
 function Test-UdpFileHash {
     param(
         [Parameter(Mandatory)][string]$Path,
         [Parameter(Mandatory)][string]$ExpectedSha256
     )
-    $actual = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    $actual = Get-UdpFileSha256 -Path $Path
     $ok = ($actual -eq $ExpectedSha256.ToLowerInvariant())
     if ($ok) {
         Write-UdpLog "SHA256 OK for $(Split-Path -Leaf $Path) ($actual)" -Level Detail

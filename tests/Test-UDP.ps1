@@ -101,6 +101,13 @@ Assert-Udp ((Get-UdpHashFromSums -SumsText $sums -FileName 'Win11Debloat.zip') -
 Assert-Udp ($null -eq (Get-UdpHashFromSums -SumsText $sums -FileName 'missing.zip')) 'Get-UdpHashFromSums returns null for a missing file'
 Assert-Udp ((Format-UdpArgument 'C:\Program Files\x.cfg') -eq '"C:\Program Files\x.cfg"') 'Format-UdpArgument quotes paths with spaces'
 Assert-Udp ((Format-UdpArgument '/quiet') -eq '/quiet') 'Format-UdpArgument leaves simple arguments alone'
+$hashFile = Join-Path $workDir 'sha256-test.txt'
+[System.IO.File]::WriteAllText($hashFile, 'abc', (New-Object System.Text.ASCIIEncoding))
+Assert-Udp ((Get-UdpFileSha256 -Path $hashFile) -eq 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad') 'Get-UdpFileSha256 gives the standard SHA256 of "abc"'
+Assert-Udp (Test-UdpFileHash -Path $hashFile -ExpectedSha256 'BA7816BF8F01CFEA414140DE5DAE2223B00361A396177A9CB410FF61F20015AD') 'Test-UdpFileHash accepts an uppercase checksum'
+$usesGetFileHash = @(Get-ChildItem -Path $root -Recurse -Filter '*.ps1' | Where-Object { $_.FullName -notmatch '\\tests\\' } |
+        Select-String -Pattern 'Get-FileHash\s+-' | ForEach-Object { "$($_.Filename):$($_.LineNumber)" })
+Assert-Udp ($usesGetFileHash.Count -eq 0) "No script calls Get-FileHash, which is missing on some Windows builds ($($usesGetFileHash -join ', '))"
 $esc = [char]27
 Assert-Udp ((ConvertTo-UdpPlainText "$esc[40;32m EDGE REMOVED! $esc[97m-done") -eq ' EDGE REMOVED! -done') 'Terminal colour codes are removed from tool output'
 Assert-Udp ((@(Get-UdpEdgeExePaths) | Where-Object { $_ -is [array] }).Count -eq 0) 'Get-UdpEdgeExePaths returns a flat list'

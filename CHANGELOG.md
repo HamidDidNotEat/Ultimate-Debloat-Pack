@@ -4,6 +4,12 @@ All notable changes to Ultimate Debloat Pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-11-07
+
+### Fixed
+
+- **Win11Debloat and Bulk Crap Uninstaller failed with "The term 'Get-FileHash' is not recognized" on some Windows builds** (seen on Windows 11 build 26300). In Windows PowerShell, `Get-FileHash` is a script function of a Windows module rather than a built-in command, and that build does not have it. UDP and the one-liner's `Get.ps1` now calculate SHA256 checksums with .NET directly, which works on every Windows version. The same problem also stopped the Win11Debloat app list from loading at start-up.
+
 ## [0.1.11] - 2026-11-07
 
 ### Fixed
@@ -117,7 +123,8 @@ Found during the first virtual machine test, planned for the next releases:
 - Edge removal can report "Failed" although Edge was removed: the result is checked before Edge's own uninstaller has finished.
 - Edge shortcuts (desktop, Start menu) stay behind after Edge removal and open an empty window.
 
-[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.11...HEAD
+[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.12...HEAD
+[0.1.12]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.8...v0.1.9

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": {
     "name": "UDP (Ultimate Debloat Pack)",
-    "version": "0.1.11",
+    "version": "0.1.12",
     "repository": "HamidDidNotEat/Ultimate-Debloat-Pack",
     "website": "https://hamiddidnoteat.github.io/",
     "startCommand": "irm https://hamiddidnoteat.github.io/udp | iex",
