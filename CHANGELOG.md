@@ -4,6 +4,13 @@ All notable changes to Ultimate Debloat Pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.11] - 2026-11-07
+
+### Fixed
+
+- **The privacy extensions on the browser page are readable.** Each one now says what it does, for example "uBlock Origin Lite: blocks ads and trackers", instead of showing its store ID in brackets, which looked like random letters. The ID still appears when you point at an extension, and in the log.
+- **No more ticked-but-greyed extensions.** When "Install privacy extensions" is unticked, the extension list and its explanation are hidden. Before, the extensions stayed ticked but greyed out, as if they would be installed.
+
 ## [0.1.10] - 2026-11-05
 
 ### Changed
@@ -110,7 +117,8 @@ Found during the first virtual machine test, planned for the next releases:
 - Edge removal can report "Failed" although Edge was removed: the result is checked before Edge's own uninstaller has finished.
 - Edge shortcuts (desktop, Start menu) stay behind after Edge removal and open an empty window.
 
-[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.10...HEAD
+[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.11...HEAD
+[0.1.11]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.7...v0.1.8

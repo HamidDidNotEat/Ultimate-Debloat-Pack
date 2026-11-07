@@ -79,6 +79,7 @@ foreach ($id in 'shutup10', 'autoruns') {
 foreach ($browser in $context.Config.tools.browser.browsers.PSObject.Properties) {
     Assert-Udp ([bool]$browser.Value.integrity.expectedSigner) "browser $($browser.Name) has an expected signer"
     Assert-Udp ([bool]$browser.Value.winget) "browser $($browser.Name) has a winget id"
+    Assert-Udp (@($browser.Value.extensions | Where-Object { -not $_.description }).Count -eq 0) "browser $($browser.Name): every extension has a description"
 }
 Assert-Udp ($context.Config.tools.edgeRemoval.sha256 -match '^[0-9a-f]{64}$') 'Edge removal has a pinned SHA256'
 Assert-Udp ([string]$context.Config.project.startCommand -like "irm $($context.Config.project.website)*| iex") 'The start command uses the website address'

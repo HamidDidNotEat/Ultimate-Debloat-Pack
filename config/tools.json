@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": {
     "name": "UDP (Ultimate Debloat Pack)",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "repository": "HamidDidNotEat/Ultimate-Debloat-Pack",
     "website": "https://hamiddidnoteat.github.io/",
     "startCommand": "irm https://hamiddidnoteat.github.io/udp | iex",
@@ -164,8 +164,8 @@
             "docs": "https://firefox-admin-docs.mozilla.org/reference/policies/extensionsettings/"
           },
           "extensions": [
-            { "name": "uBlock Origin", "id": "uBlock0@raymondhill.net", "installUrl": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi", "homepage": "https://addons.mozilla.org/firefox/addon/ublock-origin/", "default": true },
-            { "name": "Privacy Badger", "id": "jid1-MnnxcxisBPnSXQ@jetpack", "installUrl": "https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi", "homepage": "https://privacybadger.org/", "default": true }
+            { "name": "uBlock Origin", "description": "blocks ads, trackers and malicious websites", "id": "uBlock0@raymondhill.net", "installUrl": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi", "homepage": "https://addons.mozilla.org/firefox/addon/ublock-origin/", "default": true },
+            { "name": "Privacy Badger", "description": "learns to block invisible trackers, made by the EFF", "id": "jid1-MnnxcxisBPnSXQ@jetpack", "installUrl": "https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi", "homepage": "https://privacybadger.org/", "default": true }
           ]
         },
         "chrome": {
@@ -191,8 +191,8 @@
             "docs": "https://support.google.com/chrome/a/answer/9867568"
           },
           "extensions": [
-            { "name": "uBlock Origin Lite", "id": "ddkjiahejlhfcafbddmgiahcphecmpfh", "homepage": "https://github.com/uBlockOrigin/uBOL-home", "default": true },
-            { "name": "Privacy Badger", "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp", "homepage": "https://privacybadger.org/", "default": true }
+            { "name": "uBlock Origin Lite", "description": "blocks ads and trackers (the version of uBlock Origin made for Chrome-based browsers)", "id": "ddkjiahejlhfcafbddmgiahcphecmpfh", "homepage": "https://github.com/uBlockOrigin/uBOL-home", "default": true },
+            { "name": "Privacy Badger", "description": "learns to block invisible trackers, made by the EFF", "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp", "homepage": "https://privacybadger.org/", "default": true }
           ]
         },
         "brave": {
@@ -218,8 +218,8 @@
             "docs": "https://support.brave.app/hc/en-us/articles/360039248271-Group-Policy"
           },
           "extensions": [
-            { "name": "uBlock Origin Lite", "id": "ddkjiahejlhfcafbddmgiahcphecmpfh", "homepage": "https://github.com/uBlockOrigin/uBOL-home", "default": false },
-            { "name": "Privacy Badger", "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp", "homepage": "https://privacybadger.org/", "default": false }
+            { "name": "uBlock Origin Lite", "description": "blocks ads and trackers (the version of uBlock Origin made for Chrome-based browsers)", "id": "ddkjiahejlhfcafbddmgiahcphecmpfh", "homepage": "https://github.com/uBlockOrigin/uBOL-home", "default": false },
+            { "name": "Privacy Badger", "description": "learns to block invisible trackers, made by the EFF", "id": "pkehgijcmpdhfbdbbnkijodmdjhbjlgp", "homepage": "https://privacybadger.org/", "default": false }
           ]
         }
       }

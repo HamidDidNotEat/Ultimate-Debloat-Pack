@@ -289,13 +289,25 @@ function Update-UdpBrowserPage {
     $panel.Children.Clear()
     foreach ($extension in $browser.extensions) {
         $check = New-Object System.Windows.Controls.CheckBox
-        $check.Content = "$($extension.name)  ($($extension.id))"
+        $label = New-Object System.Windows.Controls.TextBlock
+        $label.TextWrapping = 'Wrap'
+        $nameRun = New-Object System.Windows.Documents.Run($extension.name)
+        $nameRun.FontWeight = 'SemiBold'
+        [void]$label.Inlines.Add($nameRun)
+        if ($extension.description) {
+            $descriptionRun = New-Object System.Windows.Documents.Run(": $($extension.description)")
+            $descriptionRun.Foreground = New-UdpBrush '#4B5563'
+            [void]$label.Inlines.Add($descriptionRun)
+        }
+        $check.Content = $label
+        # The store ID is what the policy uses: available on hover and in the log, not on the page.
+        $check.ToolTip = "Extension ID: $($extension.id)"
         $check.Tag = $extension.id
         $check.IsChecked = [bool]$extension.default
         [void]$panel.Children.Add($check)
     }
-    $panel.IsEnabled = [bool](Get-UdpPageControl 'browser' 'ExtensionsCheck').IsChecked
     (Get-UdpPageControl 'browser' 'ManagedNote').Text = $script:ManagedNotes[$id]
+    Update-UdpExtensionsVisibility
 
     $taskbarNote = Get-UdpPageControl 'browser' 'TaskbarNote'
     if (Test-UdpTaskbarLayoutSupported -Context $ctx) {
@@ -315,6 +327,15 @@ function Update-UdpBrowserPage {
     Update-UdpPolicyWarning
 }
 
+# The extension list and its explanation only show while "Install privacy extensions" is ticked,
+# so nothing on the page looks selected when no extension will be installed.
+function Update-UdpExtensionsVisibility {
+    $state = 'Collapsed'
+    if ((Get-UdpPageControl 'browser' 'ExtensionsCheck').IsChecked) { $state = 'Visible' }
+    (Get-UdpPageControl 'browser' 'ExtensionsPanel').Visibility = $state
+    (Get-UdpPageControl 'browser' 'ManagedBox').Visibility = $state
+}
+
 # The policy explanation is shown while an option that uses a Windows policy is ticked.
 function Update-UdpPolicyWarning {
     $warning = Get-UdpPageControl 'browser' 'PolicyWarning'
@@ -331,8 +352,8 @@ function Initialize-UdpBrowserPage {
         (Get-UdpPageControl 'browser' $name).Add_Checked({ Update-UdpBrowserPage })
     }
     $extensions = Get-UdpPageControl 'browser' 'ExtensionsCheck'
-    $extensions.Add_Checked({ (Get-UdpPageControl 'browser' 'ExtensionsPanel').IsEnabled = $true })
-    $extensions.Add_Unchecked({ (Get-UdpPageControl 'browser' 'ExtensionsPanel').IsEnabled = $false })
+    $extensions.Add_Checked({ Update-UdpExtensionsVisibility })
+    $extensions.Add_Unchecked({ Update-UdpExtensionsVisibility })
     $taskbar = Get-UdpPageControl 'browser' 'TaskbarCheck'
     if (-not (Test-UdpTaskbarLayoutSupported -Context $script:Wizard.Context)) {
         $taskbar.IsChecked = $false

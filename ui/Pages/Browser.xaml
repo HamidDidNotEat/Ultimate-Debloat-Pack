@@ -18,7 +18,7 @@
         <TextBlock Text="Privacy extensions" Style="{StaticResource SectionTitle}"/>
         <CheckBox x:Name="ExtensionsCheck" Content="Install privacy extensions automatically through browser policies"/>
         <StackPanel x:Name="ExtensionsPanel" Margin="22,2,0,4"/>
-        <Border Style="{StaticResource InfoBox}">
+        <Border x:Name="ManagedBox" Style="{StaticResource InfoBox}">
             <TextBlock x:Name="ManagedNote" Style="{StaticResource Body}" Margin="0"/>
         </Border>
 
