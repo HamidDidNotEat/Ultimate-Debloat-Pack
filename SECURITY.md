@@ -23,4 +23,4 @@ You will get an answer as soon as possible. This is a hobby project maintained i
 - `Get.ps1` accepting a release archive that does not match its published `SHA256SUMS`.
 - UDP leaving the system less secure than intended: for example, policies or permissions that stay behind without being documented.
 
-Problems in the third-party tools themselves (Win11Debloat, O&O ShutUp10++, Bulk Crap Uninstaller, Edge_Removal.bat, NVCleanstall, Autoruns, the browsers) should be reported to their authors. Links are in the [README](README.md#credits).
+Problems in the third-party tools themselves (Win11Debloat, O&O ShutUp10++, Bulk Crap Uninstaller, UninstallEdge.ps1, NVCleanstall, Autoruns, the browsers) should be reported to their authors. Links are in the [README](README.md#credits).

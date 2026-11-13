@@ -1,13 +1,22 @@
-# Step 5: Edge removal with AveYo's Edge_Removal.bat (https://github.com/AveYo/fox).
+# Step 5: Edge removal with ave9858's UninstallEdge.ps1
+# (https://gist.github.com/ave9858/c3451d9f452389ac7607c99d45edecc6, public domain, CC0-1.0).
 #
-# Why UDP does not simply run the .bat file:
-#   - Its options are variables at the top of the script and default to also removing WebView2,
-#     Widgets and Gaming Services. UDP must always keep WebView2.
-#   - Its launcher re-opens itself in a new PowerShell window that stays open (-NoExit), so UDP
-#     could not tell when it has finished.
-# So UDP downloads the file pinned in config/tools.json, checks its SHA256, takes the PowerShell
-# part that the .bat embeds, sets the three option lines and runs that part directly with no
-# window, waiting for it to finish. The exact option lines used are written to the log.
+# Microsoft only lets Edge be uninstalled in the European Economic Area. The script runs Edge's own
+# uninstaller (the uninstall command of Edge's entry in Settings > Apps, plus --force-uninstall) in
+# a way the uninstaller accepts in every country:
+#   - it sets the AllowUninstall value under EdgeUpdateDev,
+#   - it creates the empty placeholder for the old built-in Edge that the uninstaller looks for,
+#   - it starts the uninstaller from a temporary copy of cmd.exe named dllhost.exe.
+# It deletes those temporary files afterwards and does not touch WebView2 or Edge Update (which
+# keeps WebView2 up to date).
+#
+# UDP downloads the gist revision pinned in config/tools.json, checks its SHA256 and runs it
+# unchanged with no window. Then UDP waits until Edge is gone, checks that WebView2 is still there
+# and removes leftover Edge shortcuts.
+#
+# UDP 0.1.0 to 0.1.12 used AveYo's Edge_Removal.bat instead. It cannot remove Edge 120 or newer,
+# but it installs a link redirect (C:\Scripts\OpenWebSearch.cmd and Image File Execution Options
+# entries for msedge.exe). UDP does not change that redirect; it only mentions it in the log.
 
 function Test-UdpEdgeRemovalAvailable {
     param([hashtable]$Context)
@@ -41,7 +50,7 @@ function Get-UdpEdgeShortcuts {
     return $found
 }
 
-# Once Edge is gone its shortcuts only open AveYo's link redirect, which shows an empty window.
+# Once Edge is gone, its leftover shortcuts point to a program that no longer exists.
 function Remove-UdpEdgeShortcuts {
     param([hashtable]$Context)
     $removed = 0
@@ -68,58 +77,58 @@ function Get-UdpEdgeRemovalPlan {
         return @("Edge is already removed: only remove its $(@(Get-UdpEdgeShortcuts).Count) leftover shortcut(s) on the desktop and in the Start menu")
     }
     $tool = Get-UdpToolConfig -Context $Context -Id 'edgeRemoval'
-    $extra = @()
-    if ($Options.RemoveWidgets) { $extra += 'Widgets' }
-    if ($Options.RemoveXSocial) { $extra += 'Gaming Services' }
-    $also = 'nothing else'
-    if ($extra.Count -gt 0) { $also = $extra -join ' and ' }
     return @(
-        "Download Edge_Removal.bat (AveYo/fox, commit $($tool.commit.Substring(0, 7))) and check its SHA256",
-        "Remove Microsoft Edge and keep WebView2. Also remove: $also",
-        'Run it with no window, wait for Edge''s own uninstaller to finish, then check that Edge is gone and WebView2 is still there',
+        "Download $($tool.name) by $($tool.author) (gist revision $($tool.revision.Substring(0, 7)) of $($tool.revisionDate)) and check its SHA256",
+        'Run it with no window: it starts Edge''s own uninstaller in a way the uninstaller accepts outside the EEA. WebView2 is not touched',
+        'Wait until Edge is gone, then check that WebView2 is still there',
         'Remove the leftover Edge shortcuts on the desktop and in the Start menu'
     )
 }
 
-# Returns the PowerShell part of Edge_Removal.bat with the options set, or throws if the file
-# layout is not the one UDP expects (in that case nothing is run).
-function Get-UdpEdgeRemovalPayload {
-    param([string]$ScriptText, $Tool, [hashtable]$Options)
+# AveYo's Edge_Removal.bat, used by UDP 0.1.0 to 0.1.12, leaves a link redirect behind.
+function Test-UdpEdgeRedirectLeftover {
+    if (Test-Path -LiteralPath (Join-Path $env:SystemDrive 'Scripts\OpenWebSearch.cmd')) { return $true }
+    $filter = 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\msedge.exe\0'
+    $debugger = (Get-ItemProperty -LiteralPath $filter -Name Debugger -ErrorAction SilentlyContinue).Debugger
+    return ([string]$debugger -like '*OpenWebSearch*')
+}
 
-    $lines = $ScriptText -split "`r?`n"
-    $start = -1
-    $end = -1
-    for ($i = 0; $i -lt $lines.Count; $i++) {
-        if ($start -lt 0 -and $lines[$i].TrimEnd() -ceq $Tool.payloadStartLine) { $start = $i; continue }
-        if ($start -ge 0 -and $lines[$i].StartsWith($Tool.payloadEndPrefix)) { $end = $i; break }
-    }
-    if ($start -lt 0 -or $end -lt 0) { throw 'Edge_Removal.bat does not have the expected layout; nothing was run.' }
+# Edge's uninstall command includes --verbose-logging, so the uninstaller writes msedge_installer.log.
+# Returns the newest one written since $Since, or $null.
+function Get-UdpEdgeInstallerLog {
+    param([datetime]$Since)
+    $candidates = @(
+        (Join-Path $env:TEMP 'msedge_installer.log'),
+        (Join-Path $env:SystemRoot 'SystemTemp\msedge_installer.log'),
+        (Join-Path $env:SystemRoot 'Temp\msedge_installer.log')
+    )
+    $found = @($candidates | Select-Object -Unique | ForEach-Object { Get-Item -LiteralPath $_ -ErrorAction SilentlyContinue } |
+            Where-Object { $_.LastWriteTime -ge $Since } | Sort-Object LastWriteTime -Descending)
+    if ($found.Count -gt 0) { return $found[0].FullName }
+    return $null
+}
 
-    $payload = ($lines[($start + 1)..($end - 1)] -join "`r`n")
-    # The .bat stores its payload in a PowerShell here-string and uses $@ / @$ as stand-ins for
-    # the nested here-string markers; it swaps them back before running. Do the same.
-    $payload = $payload.Replace('$@', "'@").Replace('@$', "@'")
-
-    $wanted = [ordered]@{
-        webview = 0
-        widgets = [int][bool]$Options.RemoveWidgets
-        xsocial = [int][bool]$Options.RemoveXSocial
+function Write-UdpEdgeInstallerLog {
+    param([string]$Path, [int]$Lines = 40)
+    try {
+        $tail = @(Get-Content -LiteralPath $Path -Tail $Lines -ErrorAction Stop)
+        Write-UdpLog "Last $($tail.Count) lines of Edge's own uninstaller log ($Path):" -Level Detail
+        foreach ($line in $tail) { Write-UdpLog "  $line" -Level Detail }
     }
-    foreach ($name in $wanted.Keys) {
-        $original = $Tool.optionLines.$name
-        $count = ([regex]::Matches($payload, [regex]::Escape($original))).Count
-        if ($count -ne 1) { throw "Option line '$original' found $count times in Edge_Removal.bat (expected once); nothing was run." }
-        $replacement = $original -replace '= 1$', "= $($wanted[$name])"
-        $payload = $payload.Replace($original, $replacement)
-        Write-UdpLog "Edge_Removal option: $replacement" -Level Info
+    catch {
+        Write-UdpLog "Could not read ${Path}: $($_.Exception.Message)" -Level Warning
     }
-    return $payload
 }
 
 function Invoke-UdpEdgeRemoval {
     param([hashtable]$Context, [hashtable]$Options)
 
     $tool = Get-UdpToolConfig -Context $Context -Id 'edgeRemoval'
+
+    if (Test-UdpEdgeRedirectLeftover) {
+        Write-UdpLog ('Found the link redirect left by AveYo''s Edge_Removal.bat from an earlier UDP version ' +
+            "($env:SystemDrive\Scripts\OpenWebSearch.cmd). UDP leaves it as it is; docs/edge-removal.md explains how to remove it.") -Level Info
+    }
 
     if (-not (Test-UdpEdgeInstalled)) {
         $count = Remove-UdpEdgeShortcuts -Context $Context
@@ -142,36 +151,33 @@ function Invoke-UdpEdgeRemoval {
     }
 
     $folder = New-UdpWorkFolder -Context $Context -Name 'edge'
-    $download = Join-Path $folder 'Edge_Removal.bat.txt'
-    Invoke-UdpDownload -Uri $tool.url -OutFile $download | Out-Null
-    if (-not (Test-UdpFileHash -Path $download -ExpectedSha256 $tool.sha256)) {
-        return New-UdpStepResult -Status Skipped -Message 'Edge_Removal.bat does not match the SHA256 pinned in config/tools.json; skipped for safety.'
+    $scriptPath = Join-Path $folder $tool.name
+    Invoke-UdpDownload -Uri $tool.url -OutFile $scriptPath | Out-Null
+    if (-not (Test-UdpFileHash -Path $scriptPath -ExpectedSha256 $tool.sha256)) {
+        return New-UdpStepResult -Status Skipped -Message "$($tool.name) does not match the SHA256 pinned in config/tools.json; skipped for safety."
     }
 
-    try {
-        $payload = Get-UdpEdgeRemovalPayload -ScriptText ([System.IO.File]::ReadAllText($download)) -Tool $tool -Options $Options
-    }
-    catch {
-        return New-UdpStepResult -Status Skipped -Message $_.Exception.Message
-    }
-
-    $payloadPath = Join-Path $folder 'Edge_Removal.ps1'
-    [System.IO.File]::WriteAllText($payloadPath, $payload, (New-Object System.Text.UTF8Encoding($true)))
-    Write-UdpLog "Prepared $payloadPath" -Level Detail
-
+    $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $scriptPath)
     if ($Context.DryRun) {
-        Write-UdpLog "[dry run] would run: powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$payloadPath`"" -Level DryRun
+        Write-UdpLog "[dry run] would run: $powershell $(Join-UdpArguments -ArgumentList $arguments)" -Level DryRun
         Remove-UdpEdgeShortcuts -Context $Context | Out-Null
         return New-UdpStepResult -Status Success -Message 'Dry run: Edge not removed.'
     }
 
-    $powershell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-    $exitCode = Invoke-UdpProcess -FilePath $powershell -Label 'Edge_Removal' -ArgumentList @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $payloadPath)
+    $started = (Get-Date).AddSeconds(-5)
+    $exitCode = Invoke-UdpProcess -FilePath $powershell -Label $tool.name -ArgumentList $arguments
 
-    # The script restarts Explorer; make sure it is running again.
-    if (-not (Get-Process -Name explorer -ErrorAction SilentlyContinue)) { Start-Process explorer.exe }
+    # Exit code 0: the uninstaller ran. Anything else: the script stopped with an error, normally
+    # before the uninstaller started, so there is nothing to wait for.
+    $timeout = 300
+    if ($exitCode -ne 0) { $timeout = 15 }
+    $edgeGone = Wait-UdpEdgeRemoved -TimeoutSeconds $timeout
 
-    $edgeGone = Wait-UdpEdgeRemoved -TimeoutSeconds 300
+    $installerLog = Get-UdpEdgeInstallerLog -Since $started
+    if ($installerLog -and -not $edgeGone) { Write-UdpEdgeInstallerLog -Path $installerLog }
+    elseif ($installerLog) { Write-UdpLog "Edge's own uninstaller log: $installerLog" -Level Detail }
+
     $webView = Test-UdpWebView2Installed
     Write-UdpLog "WebView2 Runtime after removal: $(if ($webView) { 'present' } else { 'NOT FOUND' })" -Level Info
     $cleanup = ''
@@ -189,7 +195,11 @@ function Invoke-UdpEdgeRemoval {
     if ($edgeGone) {
         return New-UdpStepResult -Status Failed -Message 'Edge was removed but WebView2 is missing afterwards. Reinstall it from https://developer.microsoft.com/microsoft-edge/webview2/'
     }
-    return New-UdpStepResult -Status Failed -Message "Edge is still installed after waiting 5 minutes ($(Get-UdpEdgeLeftoverText)). Script exit code: $exitCode. See the log for details."
+    if ($exitCode -ne 0) {
+        return New-UdpStepResult -Status Failed -Message ("$($tool.name) stopped with exit code $exitCode, so Edge's uninstaller probably did not run. The log shows its error. " +
+            "If your antivirus reported dllhost.exe in $env:SystemRoot\SystemTemp, that was the script's temporary copy of cmd.exe.")
+    }
+    return New-UdpStepResult -Status Failed -Message "Edge is still installed after waiting 5 minutes ($(Get-UdpEdgeLeftoverText)). See the log, which includes the end of Edge's own uninstaller log."
 }
 
 function Get-UdpEdgeLeftoverText {
@@ -200,8 +210,8 @@ function Get-UdpEdgeLeftoverText {
     return ($left -join '; ')
 }
 
-# Edge's uninstaller keeps running in the background after AveYo's script ends (it hands over to a
-# copy of itself), so checking right away reports Edge as still installed. Wait until both its
+# Edge's uninstaller can still be finishing (removing files, its Settings > Apps entry) when the
+# script returns, so checking right away may report Edge as still installed. Wait until both its
 # Settings > Apps entry and msedge.exe are gone, or until the timeout.
 function Wait-UdpEdgeRemoved {
     param([int]$TimeoutSeconds = 300)
@@ -217,7 +227,8 @@ function Wait-UdpEdgeRemoved {
             return $false
         }
         if (-not $announced) {
-            Write-UdpLog "Waiting for Edge's own uninstaller to finish (up to $([int]($TimeoutSeconds / 60)) minutes): $(Get-UdpEdgeLeftoverText)" -Level Info
+            $wait = if ($TimeoutSeconds -ge 120) { "$([int]($TimeoutSeconds / 60)) minutes" } else { "$TimeoutSeconds seconds" }
+            Write-UdpLog "Waiting for Edge's own uninstaller to finish (up to $wait): $(Get-UdpEdgeLeftoverText)" -Level Info
             $announced = $true
         }
         Start-Sleep -Seconds 3

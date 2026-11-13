@@ -6,7 +6,7 @@
     Always: parses every .ps1 file, checks that source files are plain ASCII (Windows PowerShell 5.1
     reads files without a BOM as ANSI), validates config/tools.json, loads every XAML page and
     runs small unit checks.
-    -Online: also downloads the pinned Edge_Removal.bat and the latest Win11Debloat release to
+    -Online: also downloads the pinned UninstallEdge.ps1 and the latest Win11Debloat release to
     check that UDP still understands them.
     -DryRunSteps: also runs every step in dry-run mode without the window (needs administrator
     rights because Win11Debloat -WhatIf does).
@@ -82,6 +82,7 @@ foreach ($browser in $context.Config.tools.browser.browsers.PSObject.Properties)
     Assert-Udp (@($browser.Value.extensions | Where-Object { -not $_.description }).Count -eq 0) "browser $($browser.Name): every extension has a description"
 }
 Assert-Udp ($context.Config.tools.edgeRemoval.sha256 -match '^[0-9a-f]{64}$') 'Edge removal has a pinned SHA256'
+Assert-Udp ($context.Config.tools.edgeRemoval.revision -match '^[0-9a-f]{40}$' -and $context.Config.tools.edgeRemoval.url -like "*/raw/$($context.Config.tools.edgeRemoval.revision)/*") 'Edge removal URL is pinned to one gist revision'
 Assert-Udp ([string]$context.Config.project.startCommand -like "irm $($context.Config.project.website)*| iex") 'The start command uses the website address'
 $version = $context.Config.project.version
 $changelog = [System.IO.File]::ReadAllText((Join-Path $root 'CHANGELOG.md'))
@@ -146,6 +147,10 @@ $rows = @(Get-UdpReportRows -Before $snapshot -After $snapshot)
 Assert-Udp ($rows.Count -eq 7 -and @($rows | Where-Object { $_.Change -ne 'no change' }).Count -eq 0) 'Report rows compare every metric'
 $edgeShortcuts = @(Get-UdpEdgeShortcuts)
 Assert-Udp (@($edgeShortcuts | Where-Object { $_ -notlike '*.lnk' }).Count -eq 0) "Get-UdpEdgeShortcuts only returns shortcuts ($($edgeShortcuts.Count) found)"
+Assert-Udp ((Test-UdpEdgeRedirectLeftover) -is [bool]) "Test-UdpEdgeRedirectLeftover returns true or false ($(Test-UdpEdgeRedirectLeftover))"
+Assert-Udp ($null -eq (Get-UdpEdgeInstallerLog -Since (Get-Date).AddDays(1))) 'Get-UdpEdgeInstallerLog ignores logs written before the run'
+$edgePlan = @(Get-UdpEdgeRemovalPlan -Context $context -Options @{ Enabled = $true })
+Assert-Udp ($edgePlan.Count -ge 1 -and (-not (Test-UdpEdgeInstalled) -or ($edgePlan[0] -like "*$($context.Config.tools.edgeRemoval.revision.Substring(0, 7))*"))) "Edge removal plan names the pinned revision ($($edgePlan[0]))"
 Assert-Udp ((Get-UdpSubjectOrganization 'CN="Brave Software, Inc.", O="Brave Software, Inc.", L=San Francisco') -eq 'Brave Software, Inc.') 'Quoted O= is parsed'
 Assert-Udp ((Get-UdpSubjectOrganization 'CN=Google LLC, O=Google LLC, L=Mountain View') -eq 'Google LLC') 'Plain O= is parsed'
 $browsers = @(Get-UdpInstalledBrowsers)
@@ -196,17 +201,19 @@ if ($Online) {
     Write-Host 'Online'
     Initialize-UdpNetwork
     $edge = $context.Config.tools.edgeRemoval
-    $file = Join-Path $workDir 'Edge_Removal.bat.txt'
+    $file = Join-Path $workDir $edge.name
     Invoke-UdpDownload -Uri $edge.url -OutFile $file | Out-Null
-    Assert-Udp (Test-UdpFileHash -Path $file -ExpectedSha256 $edge.sha256) 'Edge_Removal.bat matches the pinned SHA256'
-    $payload = Get-UdpEdgeRemovalPayload -ScriptText ([System.IO.File]::ReadAllText($file)) -Tool $edge -Options @{ RemoveWidgets = $false; RemoveXSocial = $false }
-    Assert-Udp ($payload -match [regex]::Escape('$also_remove_webview = 0')) 'Edge payload keeps WebView2'
-    Assert-Udp ($payload -match [regex]::Escape('$also_remove_widgets = 0') -and $payload -match [regex]::Escape('$also_remove_xsocial = 0')) 'Edge payload: widgets and xsocial off by default'
-    Assert-Udp ($payload -notmatch '-verb runas') 'Edge payload does not contain the self-relaunch'
+    Assert-Udp (Test-UdpFileHash -Path $file -ExpectedSha256 $edge.sha256) "$($edge.name) matches the pinned SHA256"
+    $edgeBytes = [System.IO.File]::ReadAllBytes($file)
+    Assert-Udp (@($edgeBytes | Where-Object { $_ -gt 127 }).Count -eq 0) "$($edge.name) is plain ASCII (read correctly by Windows PowerShell 5.1)"
     $tokens = $null
     $errors = $null
-    [void][System.Management.Automation.Language.Parser]::ParseInput($payload, [ref]$tokens, [ref]$errors)
-    Assert-Udp ($errors.Count -eq 0) 'Edge payload is valid PowerShell'
+    [void][System.Management.Automation.Language.Parser]::ParseFile($file, [ref]$tokens, [ref]$errors)
+    Assert-Udp ($errors.Count -eq 0) "$($edge.name) is valid PowerShell"
+    $edgeText = [System.IO.File]::ReadAllText($file)
+    Assert-Udp ($edgeText.Contains('Uninstall\Microsoft Edge') -and $edgeText.Contains('--force-uninstall')) "$($edge.name) runs the uninstall command of Edge's own Settings > Apps entry"
+    Assert-Udp ($edgeText -notmatch 'WebView') "$($edge.name) does not mention WebView2 (it only uninstalls the Edge browser)"
+    Assert-Udp ($edgeText -notmatch 'Read-Host|ReadKey|Pause') "$($edge.name) never waits for a key press"
 
     $tool = $context.Config.tools.win11debloat
     $release = Get-UdpGitHubLatestRelease -Repo $tool.githubRelease.repo
@@ -250,7 +257,7 @@ if ($DryRunSteps) {
         shutup10     = @{ Enabled = $true; Mode = 'Gui' }
         bcu          = @{ Enabled = $true; Mode = 'RunOnce' }
         browser      = @{ Enabled = $true; Browser = 'firefox'; Extensions = $true; ExtensionIds = @('uBlock0@raymondhill.net', 'jid1-MnnxcxisBPnSXQ@jetpack'); Taskbar = $true; SetDefault = $true }
-        edge         = @{ Enabled = $true; RemoveWidgets = $false; RemoveXSocial = $false }
+        edge         = @{ Enabled = $true }
         nvcleanstall = @{ Enabled = $true }
         autoruns     = @{ Enabled = $true }
         Report       = $true

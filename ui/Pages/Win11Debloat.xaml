@@ -28,7 +28,7 @@
 
         <Border Style="{StaticResource InfoBox}">
             <TextBlock Style="{StaticResource Body}" Margin="0"
-                       Text="Win11Debloat's own Edge removal is never used: it relies on Microsoft's uninstaller, which only works in the European Economic Area. Edge is handled by UDP's Edge removal step instead."/>
+                       Text="Win11Debloat's own Edge removal is never used. Edge is handled by UDP's Edge removal step, which uses a dedicated script for removing Edge outside the European Economic Area."/>
         </Border>
 
         <TextBlock Text="Apps to remove" Style="{StaticResource SectionTitle}"/>

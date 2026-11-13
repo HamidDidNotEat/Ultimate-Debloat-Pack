@@ -4,6 +4,23 @@ All notable changes to Ultimate Debloat Pack are listed here. The format follows
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-11-13
+
+### Fixed
+
+- **Edge removal works with current versions of Edge.** AveYo's `Edge_Removal.bat`, which UDP used until now, cannot remove Edge 120 or newer: Edge's uninstaller refuses outside the European Economic Area, the script still prints "EDGE REMOVED!", and UDP then reported the step as failed. UDP now uses ave9858's `UninstallEdge.ps1` (public domain), pinned to its revision of 27 October 2026 and checked against its SHA256. It runs Edge's own uninstaller in a way the uninstaller accepts in every country, and it does not touch WebView2 or Edge Update.
+- The 5-minute wait added in 0.1.1 was based on a wrong diagnosis: Edge was not being removed at all. UDP still waits, because Edge's uninstaller can still be finishing when the script returns, but no longer when the script stops with an error.
+- **If an earlier UDP version ran the Edge step on your PC**, Edge is most likely still installed, and opening it shows a tiny empty window: that is the link redirect AveYo's script installs. Run the Edge step of 0.1.13 to finish the removal. The redirect itself (`C:\Scripts\OpenWebSearch.cmd`) is left as it is; [docs/edge-removal.md](docs/edge-removal.md#leftovers-from-udp-0112-and-earlier) explains how to remove it.
+
+### Changed
+
+- When Edge removal fails, the log ends with the last lines of Edge's own uninstaller log, so the reason is visible.
+- Your antivirus may report `dllhost.exe` in `C:\Windows\SystemTemp` during Edge removal: it is the script's temporary copy of `cmd.exe`, deleted right afterwards. The Edge page says so.
+
+### Removed
+
+- The "Widgets" and "Gaming Services" options on the Edge removal page. They only existed in AveYo's script. Win11Debloat's recommended settings already turn widgets off.
+
 ## [0.1.12] - 2026-11-07
 
 ### Fixed
@@ -123,7 +140,8 @@ Found during the first virtual machine test, planned for the next releases:
 - Edge removal can report "Failed" although Edge was removed: the result is checked before Edge's own uninstaller has finished.
 - Edge shortcuts (desktop, Start menu) stay behind after Edge removal and open an empty window.
 
-[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.12...HEAD
+[Unreleased]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.13...HEAD
+[0.1.13]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/HamidDidNotEat/Ultimate-Debloat-Pack/compare/v0.1.9...v0.1.10

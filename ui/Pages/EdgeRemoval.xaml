@@ -4,7 +4,7 @@
     <StackPanel Margin="28,22,28,18">
         <TextBlock Text="Edge removal" Style="{StaticResource PageTitle}"/>
         <TextBlock Style="{StaticResource PageSubtitle}"
-                   Text="Removes Microsoft Edge with AveYo's Edge_Removal script, in any country, and always keeps WebView2."/>
+                   Text="Removes Microsoft Edge with its own uninstaller, in any country, using ave9858's UninstallEdge script. WebView2 is not touched."/>
 
         <CheckBox x:Name="EnableCheck" Style="{StaticResource EnableToggle}" IsChecked="False" Content="Remove Microsoft Edge"/>
         <TextBlock x:Name="UnavailableNote" Style="{StaticResource Muted}" Visibility="Collapsed"/>
@@ -21,17 +21,21 @@
 
         <Border Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Text="Why not Microsoft's own uninstaller?" Style="{StaticResource SectionTitle}" Margin="0,0,0,4"/>
+                <TextBlock Text="Why a script?" Style="{StaticResource SectionTitle}" Margin="0,0,0,4"/>
                 <TextBlock Style="{StaticResource Body}"
-                           Text="Microsoft only allows a normal Edge uninstall in the European Economic Area (EEA), because of the EU Digital Markets Act. In Switzerland and every other non-EEA country the uninstall option does not work, so UDP uses AveYo's script, which works everywhere."/>
+                           Text="Microsoft only lets you uninstall Edge in the European Economic Area (EEA), because of the EU Digital Markets Act. Everywhere else, Switzerland included, Edge's uninstaller refuses."/>
+                <TextBlock Style="{StaticResource Body}"
+                           Text="The script still runs Edge's own uninstaller, but in a way it accepts in every country: it sets the flag the uninstaller checks, creates an empty placeholder for the old built-in Edge, and starts the uninstaller from a temporary copy of cmd.exe named dllhost.exe. It deletes those temporary files afterwards."/>
                 <TextBlock Text="WebView2 is always kept" Style="{StaticResource SectionTitle}"/>
                 <TextBlock Style="{StaticResource Body}"
-                           Text="WebView2 is a separate copy of the Edge engine that many apps use to show web content (for example Teams, Outlook, Widgets, game launchers and installers). Removing it breaks those apps, so UDP always keeps it, whatever the script's own default is."/>
+                           Text="WebView2 is a separate copy of the Edge engine that many apps use to show web content (for example Teams, Outlook, Widgets, game launchers and installers). The script only uninstalls the Edge browser: WebView2 stays, and so does Edge Update, which keeps WebView2 up to date. UDP checks afterwards that WebView2 is still there."/>
                 <TextBlock Text="Things to know" Style="{StaticResource SectionTitle}"/>
                 <TextBlock Style="{StaticResource Body}"
-                           Text="Edge may come back after a major Windows feature update. Just run UDP again: the step skips itself when Edge is not installed."/>
+                           Text="Microsoft does not support removing Edge outside the EEA. Edge may come back after a major Windows feature update. Just run UDP again: the step skips itself when Edge is not installed."/>
                 <TextBlock Style="{StaticResource Body}"
-                           Text="Some Windows links (search results, widgets, help links) are hard-wired to open Edge. The script redirects them to your default browser, but a few may still try to open Edge."/>
+                           Text="A few Windows links (some search results, widgets and help links) only open in Edge. Without Edge, Windows says it needs an app to open them. Win11Debloat's recommended settings already turn off Bing results in search and widgets."/>
+                <TextBlock Style="{StaticResource Body}"
+                           Text="Your antivirus may warn about dllhost.exe in C:\Windows\SystemTemp: that is the script's temporary copy of cmd.exe. If it is blocked, the step is marked as failed and the run continues."/>
                 <TextBlock Style="{StaticResource Body}"
                            Text="This step runs after the browser step, so another browser is already installed when Edge is removed."/>
                 <TextBlock Text="How to undo" Style="{StaticResource SectionTitle}"/>
@@ -40,15 +44,7 @@
             </StackPanel>
         </Border>
 
-        <TextBlock Text="Also remove (optional)" Style="{StaticResource SectionTitle}"/>
-        <CheckBox x:Name="WidgetsCheck" Content="Widgets (Windows Web Experience Pack)"/>
-        <TextBlock Style="{StaticResource Muted}" Margin="22,0,0,6"
-                   Text="Win11Debloat's defaults already turn widgets off; this removes the package itself."/>
-        <CheckBox x:Name="XSocialCheck" Content="Gaming Services"/>
-        <TextBlock Style="{StaticResource Muted}" Margin="22,0,0,6"
-                   Text="Not recommended if you play games from the Xbox app or PC Game Pass: they need Gaming Services to install and run."/>
-
         <TextBlock Style="{StaticResource Muted}" Margin="0,12,0,0"
-                   Text="Source: github.com/AveYo/fox, file Edge_Removal.bat, pinned to one commit and checked against its SHA256 (see config/tools.json). The repository has no license file; UDP does not redistribute the script, it downloads it from the official repository when it runs."/>
+                   Text="Source: ave9858's 'Uninstall Microsoft Edge' guide on gist.github.com, file UninstallEdge.ps1, public domain (CC0). Pinned to one revision and checked against its SHA256 (see config/tools.json). UDP does not redistribute it: it downloads it from the gist when it runs."/>
     </StackPanel>
 </ScrollViewer>

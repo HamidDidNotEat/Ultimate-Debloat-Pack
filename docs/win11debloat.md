@@ -46,7 +46,7 @@ Before running, UDP reads the parameter list of the downloaded `Win11Debloat.ps1
 
 ## Switches UDP never passes
 
-- `-ForceRemoveEdge`: Win11Debloat's Edge removal relies on Microsoft's uninstaller, which only works in the EEA. UDP's own Edge removal step handles Edge instead.
+- `-ForceRemoveEdge`: UDP's own Edge removal step handles Edge, with ave9858's `UninstallEdge.ps1` (see [edge-removal.md](edge-removal.md)). Win11Debloat's option uses an older form of the same method, without the step ave9858 added in October 2026 for current Windows versions.
 - `-CreateRestorePoint`: UDP has already created one. The default preset still asks for a restore point, but Win11Debloat skips it when one was made in the last 24 hours.
 - `-CLI`, `-Sysprep`, `-User`, `-Config`, `-RunSavedSettings`: not used by UDP.
 

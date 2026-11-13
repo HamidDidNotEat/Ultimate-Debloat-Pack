@@ -442,8 +442,6 @@ function Get-UdpWizardSelection {
         }
         edge         = @{
             Enabled            = (& $enabled 'edge')
-            RemoveWidgets      = [bool](Get-UdpPageControl 'edge' 'WidgetsCheck').IsChecked
-            RemoveXSocial      = [bool](Get-UdpPageControl 'edge' 'XSocialCheck').IsChecked
             ConfirmedNoBrowser = [bool](Get-UdpPageControl 'edge' 'ConfirmNoBrowserCheck').IsChecked
         }
         nvcleanstall = @{ Enabled = (& $enabled 'nvcleanstall') }

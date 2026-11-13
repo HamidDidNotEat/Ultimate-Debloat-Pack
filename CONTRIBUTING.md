@@ -50,7 +50,7 @@ The same tests run on every push and pull request ([Tests workflow](.github/work
 
 ## Updating a tool source
 
-1. Edit the tool's entry in `config/tools.json` (URL, winget ID, expected signer, or `url` + `commit` + `sha256` together for the Edge removal script).
+1. Edit the tool's entry in `config/tools.json` (URL, winget ID, expected signer, or `url` + `revision` + `revisionDate` + `sha256` together for the Edge removal script).
 2. Run the tests with `-Online`.
 3. Test a real run in a VM.
 4. Mention the change in `CHANGELOG.md` under *Unreleased*.

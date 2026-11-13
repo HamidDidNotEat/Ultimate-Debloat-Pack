@@ -30,7 +30,7 @@ config/tools.json) and keeps its own license:
   Win11Debloat ............ MIT (Raphire)
   O&O ShutUp10++ .......... freeware, O&O Software GmbH license terms
   Bulk Crap Uninstaller ... Apache-2.0 (Marcin Szeniak)
-  Edge_Removal.bat ........ no license file in the AveYo/fox repository
+  UninstallEdge.ps1 ....... CC0-1.0, public domain (ave9858)
   NVCleanstall ............ freeware, TechPowerUp
   Autoruns ................ Sysinternals Software License Terms (Microsoft)
   Firefox / Chrome / Brave  their respective licenses

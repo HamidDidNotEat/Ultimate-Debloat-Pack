@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "project": {
     "name": "UDP (Ultimate Debloat Pack)",
-    "version": "0.1.12",
+    "version": "0.1.13",
     "repository": "HamidDidNotEat/Ultimate-Debloat-Pack",
     "website": "https://hamiddidnoteat.github.io/",
     "startCommand": "irm https://hamiddidnoteat.github.io/udp | iex",
@@ -32,7 +32,7 @@
       "baseArguments": [ "-Silent" ],
       "neverPass": [ "ForceRemoveEdge", "CreateRestorePoint", "CLI", "Sysprep", "User", "Config", "RunSavedSettings" ],
       "neverRemoveApps": [ "Microsoft.Edge", "XPFFTQ037JWMHS" ],
-      "neverRemoveAppsNotes": "Edge is removed by UDP's own Edge removal step (Win11Debloat's Edge removal only works in the EEA), so it is never offered in the app list.",
+      "neverRemoveAppsNotes": "Edge is removed by UDP's own Edge removal step, so it is never offered in the app list.",
       "appCatalog": {
         "apps": "Config/Apps.json",
         "names": "Config/Languages/en-US/Apps.json"
@@ -225,27 +225,21 @@
       }
     },
     "edgeRemoval": {
-      "name": "Edge_Removal.bat",
-      "author": "AveYo",
-      "description": "Removes Microsoft Edge on any region, including outside the EEA. UDP always keeps WebView2.",
-      "homepage": "https://github.com/AveYo/fox",
-      "license": "No license file in the repository. UDP does not redistribute it; it is downloaded from the official repository at run time.",
-      "licenseUrl": null,
-      "url": "https://raw.githubusercontent.com/AveYo/fox/2be2a9052b02a6d99e84871d05f2d301762176ff/Edge_Removal.bat",
-      "commit": "2be2a9052b02a6d99e84871d05f2d301762176ff",
-      "commitDate": "2023-09-14",
-      "sha256": "d4be8ed46ba80331a835aeef27064c79c0940206edba16da1da835351a06b107",
+      "name": "UninstallEdge.ps1",
+      "author": "ave9858",
+      "description": "Runs Microsoft Edge's own uninstaller in a way it accepts in every country, including outside the EEA. It does not touch WebView2 or Edge Update.",
+      "homepage": "https://gist.github.com/ave9858/c3451d9f452389ac7607c99d45edecc6",
+      "license": "CC0-1.0",
+      "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "url": "https://gist.githubusercontent.com/ave9858/c3451d9f452389ac7607c99d45edecc6/raw/abdd31d1d074154b16e48a92d44824ac1d5fc970/UninstallEdge.ps1",
+      "revision": "abdd31d1d074154b16e48a92d44824ac1d5fc970",
+      "revisionDate": "2026-10-27",
+      "sha256": "b3f35e4795e2d3d8989baad03c757089799375d70e81d5d9c58b5a3719908858",
       "integrity": {
         "method": "sha256-pinned",
-        "notes": "Batch/PowerShell hybrid script, not signed. Pinned to a commit and checked against this SHA256. To update: change url, commit and sha256 together."
+        "notes": "PowerShell script in a GitHub gist, not signed. Pinned to one gist revision and checked against this SHA256, then run unchanged. To update: change url, revision, revisionDate and sha256 together."
       },
-      "payloadStartLine": "sp 'HKCU:\\Volatile Environment' 'Edge_Removal' @'",
-      "payloadEndPrefix": "'@.replace(",
-      "optionLines": {
-        "webview": "$also_remove_webview = 1",
-        "widgets": "$also_remove_widgets = 1",
-        "xsocial": "$also_remove_xsocial = 1"
-      }
+      "previousTool": "UDP 0.1.0 to 0.1.12 used AveYo's Edge_Removal.bat (github.com/AveYo/fox), which cannot remove Edge 120 or newer."
     },
     "nvcleanstall": {
       "name": "NVCleanstall",
